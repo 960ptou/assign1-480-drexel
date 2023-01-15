@@ -6,5 +6,5 @@ node_modules/*
 .DS_Store
 books
 *.csv
-*report*.html
+*report*.*
 out/*

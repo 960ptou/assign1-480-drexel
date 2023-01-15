@@ -23,6 +23,20 @@ let db = await open({
 });
 await db.get("PRAGMA foreign_keys = ON");
 
+function authorExist() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        const authorId: string = req.params.id;
+        let author: Author | undefined = await db.get(
+            "select * from authors where id = ?",
+            [authorId]
+        );
+        res.locals.author = author;
+        next();
+    };
+}
+
+
+// Handlers
 app.get("/book/:id?", async (req: Request, res: BookArrayResponse) => {
     // behavior asks that ID has higher priority than query, so if they both exist, I only care about id
     let hasQuery: boolean = Object.keys(req.query).length > 0;
@@ -94,18 +108,6 @@ app.delete("/book/:id", async (req: Request, res: StringResponse) => {
         return res.status(400).json({ error: "delete failed" });
     }
 });
-
-function authorExist() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const authorId: string = req.params.id;
-        let author: Author | undefined = await db.get(
-            "select * from authors where id = ?",
-            [authorId]
-        );
-        res.locals.author = author;
-        next();
-    };
-}
 
 app.get("/author", async (req: Request, res: AuthorArrayResponse) => {
     let allAuthor: Author[] = await db.all("select * from authors");

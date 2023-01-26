@@ -23,7 +23,7 @@ let db = await open({
 });
 await db.get("PRAGMA foreign_keys = ON");
 
-function authorExist() {
+function authorExist(){
     return async (req: Request, res: Response, next: NextFunction) => {
         const authorId: string = req.params.id;
         let author: Author | undefined = await db.get(
@@ -36,8 +36,11 @@ function authorExist() {
 }
 
 
+const apiRouter = express.Router();
+
+
 // Handlers
-app.get("/book/:id?", async (req: Request, res: BookArrayResponse) => {
+apiRouter.get("/book/:id?", async (req: Request, res: BookArrayResponse) => {
     // behavior asks that ID has higher priority than query, so if they both exist, I only care about id
     let hasQuery: boolean = Object.keys(req.query).length > 0;
     let hasId: boolean = req.params.id !== undefined;
@@ -59,7 +62,7 @@ app.get("/book/:id?", async (req: Request, res: BookArrayResponse) => {
     }
 });
 
-app.post("/book", async (req: BookRequestBody, res: StringResponse) => {
+apiRouter.post("/book", async (req: BookRequestBody, res: StringResponse) => {
     try {
         BookSchema.parse(req.body);
     } catch (e) {
@@ -90,11 +93,11 @@ app.post("/book", async (req: BookRequestBody, res: StringResponse) => {
         await insertStatement.run();
         res.json({ message: "inserted" });
     } catch (e) {
-        res.status(400).json({ error: "invalid insertion" });
+        res.status(400).json({ error: "insertion failed : book id exist" });
     }
 });
 
-app.delete("/book/:id", async (req: Request, res: StringResponse) => {
+apiRouter.delete("/book/:id", async (req: Request, res: StringResponse) => {
     const bkid: string = req.params.id;
     let statement = await db.prepare("delete from books where id=?");
     await statement.bind([bkid]);
@@ -109,12 +112,12 @@ app.delete("/book/:id", async (req: Request, res: StringResponse) => {
     }
 });
 
-app.get("/author", async (req: Request, res: AuthorArrayResponse) => {
+apiRouter.get("/author", async (req: Request, res: AuthorArrayResponse) => {
     let allAuthor: Author[] = await db.all("select * from authors");
     return res.json({ authors: allAuthor });
 });
 
-app.get(
+apiRouter.get(
     "/author/:id",
     authorExist(),
     async (req: Request, res: AuthorArrayResponse) => {
@@ -125,7 +128,7 @@ app.get(
     }
 );
 
-app.post("/author", async (req: AuthorRequestBody, res: StringResponse) => {
+apiRouter.post("/author", async (req: AuthorRequestBody, res: StringResponse) => {
     try {
         AuthorSchema.parse(req.body);
     } catch (e) {
@@ -139,12 +142,12 @@ app.post("/author", async (req: AuthorRequestBody, res: StringResponse) => {
     try {
         await insertStatement.run();
         res.json({ message: "author inserted" });
-    } catch (e) {
-        res.status(400).json({ error: "invalid insertion" });
+    }catch (e){
+        res.status(400).json({ error: "insertion failed : author exist" }); // Only error I can think of
     }
 });
 
-app.delete(
+apiRouter.delete(
     "/author/:id",
     authorExist(),
     async (req: Request, res: StringResponse) => {
@@ -177,6 +180,10 @@ app.delete(
 );
 
 // run server
+app.use("/api", apiRouter);
+app.use(express.static("public"));
+
+
 let port = 3000;
 let host = "localhost";
 let protocol = "http";

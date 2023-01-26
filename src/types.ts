@@ -10,11 +10,11 @@ export const ErrorSchema = z.object({
 });
 
 export const BookSchema = z.object({
-    id: z.string(),
-    author_id: z.string(),
-    title: z.string(),
-    pub_year: z.string(),
-    genre: z.string(),
+    id: z.string().min(1),
+    author_id: z.string().min(1),
+    title: z.string().min(1),
+    pub_year: z.string().length(4),
+    genre: z.string().min(1),
 });
 
 export const BookArraySchema = z.object({
@@ -22,9 +22,9 @@ export const BookArraySchema = z.object({
 });
 
 export const AuthorSchema = z.object({
-    id: z.string(),
-    name: z.string(),
-    bio: z.string(),
+    id: z.string().min(1),
+    name: z.string().min(1),
+    bio: z.string().min(1),
 });
 
 export const AuthorArraySchema = z.object({

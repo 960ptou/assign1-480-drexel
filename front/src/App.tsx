@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 
 interface LabelInputProps {
     label: string;
@@ -55,21 +55,25 @@ function PostForm(props: PostFormProps) {
         }
     }
 
+    const memoInputs = useMemo(() => { // some how within the return it will re-render
+        return Object.entries(postBody).map(([key, val]) => {
+            return (
+                <LabelInput
+                    key={key}
+                    type={typeof val === "string" ? "text" : "number"}
+                    label={key}
+                    onChange={(e) => {
+                        setPostBody({ ...postBody, [key]: e.target.value });
+                    }}
+                />
+            );
+        });
+    }, []);
+
     return (
         <form onSubmit={upload}>
             <div> {UiMsg} </div>
-            {Object.entries(postBody).map(([key, val]) => {
-                return (
-                    <LabelInput
-                        key={key}
-                        type={typeof val === "string" ? "text" : "number"}
-                        label={key}
-                        onChange={(e) => {
-                            setPostBody({ ...postBody, [key]: e.target.value });
-                        }}
-                    />
-                );
-            })}
+            {memoInputs}
             <input type="submit" value="Submit" />
         </form>
     );
@@ -123,7 +127,7 @@ function AuthorTable() {
     const [queryId, setQueryId] = useState("");
     const [queryResult, setQueryResult] = useState<AuthorData[]>([]);
     const [reload, setReload] = useState(0);
-    const prevReload = useRef(reload); // gpt
+    const prevReload = useRef(reload); // GPT -> avoid useEffect initial calls
 
     async function queryServer() {
         // Search author by id, if not provided will query for all

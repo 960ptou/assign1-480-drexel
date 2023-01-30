@@ -8,3 +8,4 @@ books
 *.csv
 *report*.*
 out/*
+report/*

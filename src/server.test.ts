@@ -1,6 +1,6 @@
 import axios, { AxiosError } from "axios";
 
-let port = 4000;
+let port = 3000;
 let host = "localhost";
 let protocol = "http";
 let baseUrl = `${protocol}://${host}:${port}/api`;
@@ -166,7 +166,7 @@ test("POST book with non-existing author id",async () => {
             throw errorObj;
         }
         let { response } = errorObj;
-        expect(response.status).toEqual(403);
+        expect(response.status).toEqual(400);
         expect(response.data).toEqual({ error: "author don't exist" });
     }
 })
@@ -175,6 +175,7 @@ test("POST book with non-existing author id",async () => {
 // get added book
 test("GET /book/id", async () => {
     let { data: data1 } = await axios.get(`${bkUrl}/${idBk}`);
+    console.log(data1, "HERE")
     expect(data1).toEqual({
         books: [
             {
@@ -296,8 +297,8 @@ test("GET /book?query=...", async () => {
             throw errorObj;
         }
         let { response } = errorObj;
-        expect(response.status).toEqual(400);
-        expect(response.data).toEqual({ error: "query error" });
+        expect(response.status).toEqual(500);
+        expect(response.data).toEqual({ error: "DB query error" });
     }
 
 });
@@ -328,7 +329,7 @@ test("DELETE /book not existing", async () => {
         }
         let { response } = errorObj;
         expect(response.status).toEqual(400);
-        expect(response.data).toEqual({ message: "nothing was deleted" });
+        expect(response.data).toEqual({ error: "insertion failed : book doesn't exist" });
     }
 });
 

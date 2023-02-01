@@ -28,6 +28,15 @@ beforeAll(async () => {
     }
 });
 
+afterAll(async () => {
+    try {
+        await axios.delete(`${bkUrl}`);
+        await axios.delete(`${authorUrl}`)
+    } catch (e) {
+        console.log("ERROR , Record still left");
+    }
+})
+
 // Add author
 test("POST /author", async () => {
     let { data: data1 } = await axios.post(`${authorUrl}`, {

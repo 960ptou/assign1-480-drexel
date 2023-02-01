@@ -71,9 +71,9 @@ export function PutDeleteTable(props : rowCol) {
 
     return (
         <div style={{ height: 400, width: "100%" }}>
-            <Button onClick={() => {
+            <Button onClick={async () => {
                 if (window.confirm("Do you want to Delete Those records?")){
-                    sendDelete();
+                    await sendDelete(); // wait for all to complete then refresh
                     props.reload();
                 }
                 }}> Delete ALL Selected </Button>

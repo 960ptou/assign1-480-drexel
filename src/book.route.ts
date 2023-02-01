@@ -1,6 +1,5 @@
 import express, { Request } from "express";
-import sqlite3 from "sqlite3";
-import { open } from "sqlite";
+import { db } from "./init.js";
 import {
     BookSchema,
     Book,
@@ -14,11 +13,6 @@ router.use(express.json());
 
 let authorRoute = express.Router();
 authorRoute.use(express.json());
-let db = await open({
-    filename: "../database.db",
-    driver: sqlite3.Database,
-});
-await db.get("PRAGMA foreign_keys = ON");
 
 
 // Get /book:id

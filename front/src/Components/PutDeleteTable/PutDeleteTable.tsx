@@ -43,7 +43,6 @@ export function PutDeleteTable(props : rowCol) {
     async function sendUpdate(updateData : {}){
         try{
             const putURL = `${baseUrl}`
-            console.log(updateData, "HELLO",JSON.stringify(updateData));
             const res = await fetch(putURL, { 
                 method: "PUT",
                 body: JSON.stringify(updateData),

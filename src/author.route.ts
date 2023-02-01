@@ -1,6 +1,5 @@
 import express, { Response, Request, NextFunction } from "express";
-import sqlite3 from "sqlite3";
-import { open } from "sqlite";
+import { db } from "./init.js";
 import {
     AuthorSchema,
     Author,
@@ -11,11 +10,6 @@ import {
 
 let router = express.Router();
 router.use(express.json());
-let db = await open({
-    filename: "../database.db",
-    driver: sqlite3.Database,
-});
-await db.get("PRAGMA foreign_keys = ON");
 
 function authorExist(){ // Used in url like /author/:id
     return async (req: Request, res: Response, next: NextFunction) => {

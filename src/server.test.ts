@@ -21,14 +21,10 @@ const genreB: string = "fantasy";
 // NOTE : IF DATABASE IS NOT CLEARED | SOME TESTS WILL FAIL!
 beforeAll(async () => {
     try {
-        await axios.delete(`${bkUrl}/${idBk}`);
+        await axios.delete(`${bkUrl}`);
+        await axios.delete(`${authorUrl}`)
     } catch (e) {
-        console.log("TEST Book did not exist");
-    }
-    try {
-        await axios.delete(`${authorUrl}/${idAuthor}`);
-    } catch (e) {
-        console.log("TEST Author did not exist");
+        console.log("ERROR , PLEASE BREAK");
     }
 });
 
@@ -232,7 +228,6 @@ test("POST book with non-existing author id",async () => {
 // get added book
 test("GET /book/id", async () => {
     let { data: data1 } = await axios.get(`${bkUrl}/${idBk}`);
-    console.log(data1, "HERE")
     expect(data1).toEqual({
         books: [
             {

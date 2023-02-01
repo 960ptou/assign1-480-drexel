@@ -151,6 +151,63 @@ test("POST /book", async () => {
     expect(data1).toEqual({ message: "inserted" });
 });
 
+test("PUT /book and value updates", async()=>{
+    const new_genre = "fan";
+
+    let {data : data1} = await axios.put(bkUrl, {
+        id: idBk,
+        author_id: idAuthor,
+        title: titleB,
+        pub_year: year,
+        genre: new_genre,
+    })
+
+    expect(data1).toEqual({ message: "updated" });
+
+    // Validating
+    let { data: data2 } = await axios.get(`${bkUrl}/${idBk}`);
+    expect(data2).toEqual({
+        books: [
+            {
+                id: idBk,
+                author_id: idAuthor,
+                title: titleB,
+                pub_year: year,
+                genre: new_genre,
+            },
+        ],
+    });
+
+    // Go back
+    let {data : data3} = await axios.put(bkUrl, {
+        id: idBk,
+        author_id: idAuthor,
+        title: titleB,
+        pub_year: year,
+        genre: genreB,
+    })
+
+    expect(data3).toEqual({ message: "updated" });
+
+    let { data: data4 } = await axios.get(`${bkUrl}/${idBk}`);
+    expect(data4).toEqual({
+        books: [
+            {
+                id: idBk,
+                author_id: idAuthor,
+                title: titleB,
+                pub_year: year,
+                genre: genreB,
+            },
+        ],
+    });
+
+
+
+
+
+})
+
 test("POST book with non-existing author id",async () => {
     try {
         await axios.post(`${bkUrl}`, {
@@ -204,6 +261,7 @@ test("GET /book", async () => {
         ],
     });
 });
+
 
 // Get book on query | NOTE THIS THING FAILS WHEN DB IS NOT CLEARED!
 // test("GET /book?query=...", async () => {

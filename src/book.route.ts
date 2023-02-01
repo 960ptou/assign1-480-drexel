@@ -28,6 +28,10 @@ router.get("/book/:id", async (req: Request, res: BookArrayResponse) => {
             "select * from books where id=?",
             [req.params.id]
         );
+        if (bks === undefined){
+            return res.status(403).json({error : "No book found with related Id"});
+        }
+
         return res.json({books: [bks]});
     } catch (e) {
         return res.status(500).json({error : "DB query error"});
@@ -97,6 +101,56 @@ router.post("/book", async (req: BookRequestBody, res: StringResponse) => {
     }
 });
 
+// PUT -> Forcing ALL field https://www.mscharhag.com/api-design/updating-resources-put
+// But it forces to do simular things like the delete button
+router.put("/book", async (req: BookRequestBody, res: StringResponse) => {
+    try {
+        BookSchema.parse(req.body);
+    } catch (e) {
+        return res.status(403).json({ error: "book format invalid" });
+    }
+
+    const authorId: string = req.body.author_id;
+
+    // forbid CHANGING if new author doesn't exist
+    let author = await db.get("select * from authors where id = ?", [authorId]);
+    if (!author) {
+        return res.status(400).json({ error: "author don't exist" });
+    }
+
+    // inserting
+    let updateStatement = await db.prepare(
+        "update books set author_id = ?, title = ?, pub_year = ?, genre = ? where id = ?"
+    );
+    await updateStatement.bind([
+        authorId,
+        req.body.title,
+        req.body.pub_year,
+        req.body.genre,
+        req.body.id,
+    ]);
+
+    try {
+        await updateStatement.run();
+        res.json({ message: "updated" });
+    } catch (e) {
+        res.status(500).json({ error: "DB query error" });
+    }
+});
+
+// NOTE : THIS IS ONLY used for testing, REMOVE after actual depolyment
+router.delete("/book",  async (req: Request, res: StringResponse) => {
+    let statement = await db.prepare("delete from books");
+    try {
+        const result = await statement.run();
+        if (result.changes === 0) {
+            return res.status(400).json({ message: "No book was deleted" });
+        }
+        return res.json({ message: "all books deleted" });
+    } catch (e) {
+        res.status(500).json({ error: "DB query error" });
+    }
+});
 
 // DELETE
 router.delete("/book/:id", async (req: Request, res: StringResponse) => {

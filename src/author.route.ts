@@ -68,6 +68,27 @@ router.post("/author", async (req: AuthorRequestBody, res: StringResponse) => {
     }
 });
 
+
+// NOTE : only for TESTING, will delete all records in authors table.
+router.delete("/author",async (req: Request, res: StringResponse) => {
+    // THIS FAILS if ANY book exist in books table
+    let relatedBook = await db.get(
+        "select * from books",
+    );
+
+    if (relatedBook){
+        return res.status(400).json({error : "still books exist in DB, can't drop all authors"})
+    }
+
+    let statement = await db.prepare("delete from authors")
+    try{
+        statement.run();
+        return res.json({message : "all authors deleted"})
+    }catch(e){
+        return res.status(500).json({ error: "Database error" });
+    }
+})
+
 router.delete(
     "/author/:id",
     authorExist(),

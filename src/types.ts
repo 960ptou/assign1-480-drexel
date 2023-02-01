@@ -13,7 +13,7 @@ export const BookSchema = z.object({
     id: z.string().min(1),
     author_id: z.string().min(1),
     title: z.string().min(1),
-    pub_year: z.string().length(4),
+    pub_year: z.string().length(4).regex(/\d+/),
     genre: z.string().min(1),
 });
 

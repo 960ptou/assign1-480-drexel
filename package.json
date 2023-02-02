@@ -3,7 +3,7 @@
     "setup": "rm -f database.db && sqlite3 database.db < setup.sql",
     "build": "rm -rf out && mkdir out && tsc",
     "start": "cd out && node server.js",
-    "test-data": "cd out && node ./data/populateDB.js",
+    "test-data": "cd data && node populateDB.js",
     "watch": "npm run build && tsc-watch --onSuccess 'npm run start'",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --runInBand --rootDir=src",
     "build:deploy": "rm -rf out && mkdir out && tsc && (cd front && npm run build)"

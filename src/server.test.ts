@@ -1,9 +1,11 @@
 import axios, { AxiosError } from "axios";
+import { exit } from "process";
 
 let port = 3000;
 let host = "localhost";
 let protocol = "http";
 let baseUrl = `${protocol}://${host}:${port}/api`;
+let credUrl = `${protocol}://${host}:${port}/crediential`;
 
 const authorUrl: string = `${baseUrl}/author`;
 const bkUrl: string = `${baseUrl}/book`;
@@ -21,10 +23,15 @@ const genreB: string = "fantasy";
 // NOTE : IF DATABASE IS NOT CLEARED | SOME TESTS WILL FAIL!
 beforeAll(async () => {
     try {
+        let { data : data1} = await axios.post(`${credUrl}/login/test`);
+        const myToken = data1.message;
+        axios.defaults.headers.common['Cookie'] = myToken;
+        axios.defaults.withCredentials = true;
         await axios.delete(`${bkUrl}`);
         await axios.delete(`${authorUrl}`)
+        await axios.delete(`${credUrl}/users`)
     } catch (e) {
-        console.log("ERROR , PLEASE BREAK");
+        console.log("ERROR , PLEASE BREAK",e);
     }
 });
 
@@ -32,10 +39,14 @@ afterAll(async () => {
     try {
         await axios.delete(`${bkUrl}`);
         await axios.delete(`${authorUrl}`)
+        await axios.delete(`${credUrl}/users`)
+        await axios.post(`${credUrl}/logout/test`);
     } catch (e) {
-        console.log("ERROR , Record still left");
+        console.log("ERROR , In after all", e);
     }
 })
+
+
 
 // Add author
 test("POST /author", async () => {
@@ -408,4 +419,55 @@ test("DETELE author with related book", async()=>{
         expect(response.status).toEqual(400);
         expect(response.data).toEqual({error: "author can't be deleted because a book is related to this author"});
     }
+})
+
+test("Validate login", async()=>{
+    let user = "LLLLL"
+    let pass = "ADASOKDASKDOSAK"
+    // Sign up
+    let {data: data1 } = await axios.post(`${credUrl}/signup`,{
+        username : user,
+        password : pass
+    })
+
+
+    expect(data1).toEqual({ message: "You've signup successfully" });
+
+    // Login 
+    let {data : data2} = await axios.post(`${credUrl}/login`,{
+        username : user,
+        password : pass
+    })
+
+    expect(data2).toEqual({ message: "Logged In" })
+})
+
+test("Fail login", async()=>{
+    let user = "ttessttttsajdkasjkdn"
+    let pass = "ttessttttsajdkasjkdn"
+    try {
+        // Sign up
+        let {data: data1 } = await axios.post(`${credUrl}/signup`,{
+            username : user,
+            password : pass
+        })
+
+        expect(data1).toEqual({ message: "You've signup successfully" });
+
+        // Login 
+        await axios.post(`${credUrl}/login`,{
+            username : user,
+            password : `${pass}aodksod` 
+        })
+
+    }catch(e){
+        let errorObj = e as AxiosError;
+        if (errorObj.response === undefined) {
+            throw errorObj;
+        }
+        let { response } = errorObj;
+        expect(response.status).toEqual(400);
+        expect(response.data).toEqual({ message: "Username or password incorrect" });
+    }
+
 })

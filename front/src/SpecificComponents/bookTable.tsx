@@ -12,7 +12,11 @@ interface BookData {
 type BookSearchOptions = "id" | "author_id" | "title" | "pub_year" | "genre";
 type MathOperOptions   = "eq" | "lt" | "gt"
 
-export function BookTable() {
+interface BookTableProps{
+    logged : boolean
+} 
+
+export function BookTable(props : BookTableProps) {
     const [UImsg, setUImsg] = useState(
         "Below to find books accordingly (Empty for ALL books)"
     );
@@ -33,7 +37,7 @@ export function BookTable() {
             } else if (searchOption === "id") {
                 queryString = queryValue;
             } else if (searchOption === "genre" || searchOption === "title"){
-              queryString = `?query=${searchOption}='${queryValue}'`;
+                queryString = `?query=${searchOption}='${queryValue}'`;
             }else if (searchOption === "author_id") {
                 queryString = `?query=${searchOption}=${queryValue}`;
             } else {
@@ -44,20 +48,19 @@ export function BookTable() {
                     gt: ">",
                 }[yearSearch];
                 queryString = `?query=${searchOption}${oper}${queryValue}`;
-                console.log(queryString, "giao")
             }
 
             const res = await fetch(`/api/book/${queryString}`);
             const data = await res.json(); // Not Needed
+
             if (!res.ok) {
                 setUImsg(data.error);
                 return;
             }
-            console.log(data.books);
             setQueryResult(data.books);
         } catch (e: any) {
             // Wont happen if used via UI
-            console.log(e, "error");
+            console.log("error");
         }
     }
 
@@ -131,24 +134,25 @@ export function BookTable() {
                         field : "title",
                         headerName : "Title",
                         minWidth : 200,
-                        editable : true,
+                        editable : props.logged,
                     },
                     {
                         field : "pub_year",
                         headerName : "Publication Year",
                         minWidth : 200,
-                        editable : true,
+                        editable : props.logged,
                     },
                     {
                         field : "genre",
                         headerName : "Genre",
                         minWidth : 200,
-                        editable : true,
+                        editable : props.logged,
                     }
                 ]}
                 rows = {queryResult}
                 baseUrl={`/api/book`}
                 reload={()=>{setReload(reload + 1)}}
+                enableDelete={props.logged}
             />
         </div>
     );

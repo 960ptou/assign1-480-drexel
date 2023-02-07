@@ -6,10 +6,12 @@ app.use(express.json());
 // INSERTED
 import {authorRouter} from "./author.route.js"
 import {bookRouter} from "./book.route.js"
-
+import { credientialRoute } from "./crediential.route.js";
+import cookieParser from "cookie-parser";
 // run server
-app.use("/api", authorRouter);
-app.use("/api", bookRouter)
+app.use("/api",cookieParser(), authorRouter);
+app.use("/api", cookieParser(),bookRouter)
+app.use("/crediential",cookieParser(),credientialRoute)
 app.use(express.static("public"));
 
 

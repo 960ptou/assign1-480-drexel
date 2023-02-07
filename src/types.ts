@@ -44,3 +44,17 @@ export type AuthorRequestBody = Request<{}, {}, Author>;
 export type BookArrayResponse = Response<BookArray | Error>;
 export type AuthorArrayResponse = Response<AuthorArray | Error>;
 export type StringResponse = Response<Message | Error>;
+
+
+// User Crediential routes item
+
+export const LoginSchema = z.object({
+    username: z.string().min(1),
+    password: z.string().min(1),
+});
+
+
+export type LoginBody = z.infer<typeof LoginSchema>
+export type LoginRequestBody = Request<{}, {}, LoginBody>
+
+

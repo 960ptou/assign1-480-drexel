@@ -7,12 +7,10 @@ import {
     BookArrayResponse,
     StringResponse,
 } from "./types.js";
+import { authorize } from "./crediential.route.js";
 
 let router = express.Router();
 router.use(express.json());
-
-let authorRoute = express.Router();
-authorRoute.use(express.json());
 
 
 // Get /book:id
@@ -34,6 +32,7 @@ router.get("/book/:id", async (req: Request, res: BookArrayResponse) => {
 
 // GET /book | /book?query
 router.get("/book/:id?", async (req: Request, res: BookArrayResponse) => {
+
     let hasQuery: boolean = Object.keys(req.query).length > 0;
     let queryString: string = "select * from books";
 
@@ -53,7 +52,7 @@ router.get("/book/:id?", async (req: Request, res: BookArrayResponse) => {
 
 
 // POST
-router.post("/book", async (req: BookRequestBody, res: StringResponse) => {
+router.post("/book", authorize(), async (req: BookRequestBody, res: StringResponse) => {
     try {
         BookSchema.parse(req.body);
     } catch (e) {
@@ -97,7 +96,7 @@ router.post("/book", async (req: BookRequestBody, res: StringResponse) => {
 
 // PUT -> Forcing ALL field https://www.mscharhag.com/api-design/updating-resources-put
 // But it forces to do simular things like the delete button
-router.put("/book", async (req: BookRequestBody, res: StringResponse) => {
+router.put("/book", authorize(), async (req: BookRequestBody, res: StringResponse) => {
     try {
         BookSchema.parse(req.body);
     } catch (e) {
@@ -126,20 +125,22 @@ router.put("/book", async (req: BookRequestBody, res: StringResponse) => {
 
     try {
         await updateStatement.run();
-        res.json({ message: "updated" });
+        return res.json({ message: "updated" });
     } catch (e) {
-        res.status(500).json({ error: "DB query error" });
+        return res.status(500).json({ error: "DB query error" });
     }
 });
 
 // NOTE : THIS IS ONLY used for testing, REMOVE after actual depolyment
-router.delete("/book",  async (req: Request, res: StringResponse) => {
+router.delete("/book", authorize(),  async (req: Request, res: StringResponse) => {
+    let allBooks = await db.get("select * from books");
+    if (!allBooks){
+        return res.json({message : "No Books in DB already"});
+    }
+
     let statement = await db.prepare("delete from books");
     try {
         const result = await statement.run();
-        if (result.changes === 0) {
-            return res.status(400).json({ message: "No book was deleted" });
-        }
         return res.json({ message: "all books deleted" });
     } catch (e) {
         res.status(500).json({ error: "DB query error" });
@@ -147,7 +148,7 @@ router.delete("/book",  async (req: Request, res: StringResponse) => {
 });
 
 // DELETE
-router.delete("/book/:id", async (req: Request, res: StringResponse) => {
+router.delete("/book/:id", authorize(), async (req: Request, res: StringResponse) => {
     const bkid: string = req.params.id;
 
     // In case book don't exist

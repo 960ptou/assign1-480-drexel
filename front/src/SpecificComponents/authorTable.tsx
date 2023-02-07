@@ -8,14 +8,19 @@ interface AuthorData {
     bio: string;
 }
 
-export function AuthorTable() {
+interface AuthorTableProps{
+    logged : boolean
+} 
+
+
+export function AuthorTable(props : AuthorTableProps) {
     const [UImsg, setUImsg] = useState(
         "Enter below to find author by id (empty for ALL authors)"
     );
     const [queryId, setQueryId] = useState("");
     const [queryResult, setQueryResult] = useState<AuthorData[]>([]);
     const [reload, setReload] = useState(0);
-    const prevReload = useRef(reload); // GPT -> avoid useEffect initial calls
+    const prevReload = useRef(reload);
 
     async function queryServer() {
         // Search author by id, if not provided will query for all
@@ -87,6 +92,7 @@ export function AuthorTable() {
                 rows = {queryResult}
                 baseUrl={`/api/author`}
                 reload={()=>{setReload(reload + 1)}}
+                enableDelete={props.logged}
             />
         </div>
     );

@@ -9,6 +9,7 @@ interface rowCol {
     columns : any;
     baseUrl : string;
     reload : () => void;
+    enableDelete : boolean;
 }
 
 
@@ -71,14 +72,22 @@ export function PutDeleteTable(props : rowCol) {
 
     return (
         <div style={{ height: 400, width: "100%" }}>
-            <Button onClick={async () => {
+            {
+                props.enableDelete ? <Button onClick={async () => {
+                    if (window.confirm("Do you want to Delete Those records?")){
+                        await sendDelete(); // wait for all to complete then refresh
+                        props.reload();
+                    }
+                    }}> Delete ALL Selected </Button> : <></>
+            }
+            {/* <Button onClick={async () => {
                 if (window.confirm("Do you want to Delete Those records?")){
                     await sendDelete(); // wait for all to complete then refresh
                     props.reload();
                 }
-                }}> Delete ALL Selected </Button>
+                }}> Delete ALL Selected </Button> */}
         <DataGrid
-            checkboxSelection
+            checkboxSelection={props.enableDelete}
             onCellEditCommit={onCellEdit}
             onSelectionModelChange={(ids) => {
                 const selectedIDs = new Set(ids);

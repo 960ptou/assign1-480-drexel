@@ -7,6 +7,7 @@
     "test-data": "sqlite3 database.db < data/test_data.sql && cd data && node populateDB.js",
     "watch": "npm run build && tsc-watch --onSuccess 'npm run start'",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --runInBand --rootDir=src",
+    "start:deploy": "cd out && NODE_ENV=production pm2 start server.js",
     "build:deploy": "rm -rf out && mkdir out && tsc && (cd front && npm run build)"
   },
   "type": "module",

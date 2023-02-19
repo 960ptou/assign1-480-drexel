@@ -18,3 +18,17 @@ CREATE TABLE users (
     username TEXT,
     password TEXT
 );
+
+CREATE TABLE own_book (
+    userid TEXT,
+    bid TEXT PRIMARY KEY,
+    FOREIGN KEY(userid) REFERENCES users(id),
+    FOREIGN KEY(bid) REFERENCES books(id) ON DELETE CASCADE
+);
+
+CREATE TABLE own_author (
+    userid TEXT,
+    author_id TEXT PRIMARY KEY,
+    FOREIGN KEY(userid) REFERENCES users(id),
+    FOREIGN KEY(author_id) REFERENCES authors(id) ON DELETE CASCADE
+);

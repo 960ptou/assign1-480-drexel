@@ -1,6 +1,8 @@
 import sqlite3 from "sqlite3";
 import { open } from "sqlite";
 import { faker } from '@faker-js/faker';
+import * as argon2 from "argon2";
+
 
 export let db = await open({
     filename: "../database.db",
@@ -57,7 +59,7 @@ function getBookFake(authorIds) {
 }
 async function addAuthor(id, name, bio) {
     let insertStatement = await db.prepare("insert into authors(id, name, bio) values (?,?,?)");
-    insertStatement.bind([id, name, bio]);
+    await insertStatement.bind([id, name, bio]);
     try {
         await insertStatement.run();
     }
@@ -67,7 +69,7 @@ async function addAuthor(id, name, bio) {
 }
 async function addBook(id, author_id, title, pub_year, genre) {
     let insertStatement = await db.prepare("insert into books(id, author_id, title, pub_year, genre) values (?,?,?,?,?)");
-    insertStatement.bind([id, author_id, title, pub_year, genre]);
+    await insertStatement.bind([id, author_id, title, pub_year, genre]);
     try {
         await insertStatement.run();
     }
@@ -75,23 +77,70 @@ async function addBook(id, author_id, title, pub_year, genre) {
         console.log(`error on Book : ${id}`, e);
     }
 }
-function generate(authors, books) {
+
+async function addOwnBook(bid, userid){
+    let insertStatement = await db.prepare("insert into own_book(userid, bid) values (?,?)");
+    await insertStatement.bind([userid, bid]);
+    try {
+        await insertStatement.run();
+    }
+    catch (e) {
+        console.log(`error on own book : ${bid}`, e);
+    }
+}
+
+async function addOwnAuthor(author_id, userid){
+    let insertStatement = await db.prepare("insert into own_author(userid, author_id) values (?,?)");
+    await insertStatement.bind([userid, author_id]);
+    try {
+        await insertStatement.run();
+    }
+    catch (e) {
+        console.log(`error on own author : ${author_id}`, e);
+    }
+}
+
+async function addUser(username, pass, id){
+    const hashPass = await argon2.hash(pass);
+    let insertStatement = await db.prepare("insert into users(id, username, password) values (?, ?,?)");
+    await insertStatement.bind([id, username, hashPass]);
+    try {
+        await insertStatement.run();
+    }
+    catch (e) {
+        console.log(`error on own add user : ${id}`, e);
+    }
+}
+
+async function generate(authors, books) {
     if (authors < 1) {
         console.log("WTF is wrong with you, NO AUTHOR => NO BOOK");
         return;
     }
+    const userIDs = [1,2,3,4];
+    const usernames = ["admin", "applesauce", "bananabread", "coconutcake"];
+    const userPass = ["password", "abc", "fiddlesticks", "correcthorsebatterystaple"];
+
+    for (let i = 0; i < userIDs.length; i++){
+        await addUser(usernames[i], userPass[i], userIDs[i]);
+    }
+
     let authorIds = [];
     for (let i = 0; i < authors; i++) {
         const a = getAuthorFake();
         const [id, name, bio] = [a.id, a.name, a.bio];
         authorIds.push(id);
-        addAuthor(id, name, bio);
+        await addAuthor(id, name, bio);
+        await addOwnAuthor(id, choose(userIDs));
     }
+
     for (let i = 0; i < books; i++) {
         const b = getBookFake(authorIds);
         const [id, author_id, title, pub_year, genre] = [b.id, b.author_id, b.title, b.pub_year, b.genre];
-        addBook(id, author_id, title, pub_year, genre);
+        await addBook(id, author_id, title, pub_year, genre);
+        await addOwnBook(id, choose(userIDs)); // Design don't require same book owner for same author owner
     }
+
     console.log(`COMPLETED ADDING ${authors} Authors, ${books} Books`); // IF no ERROR | Collision
 }
 generate(100, 500);

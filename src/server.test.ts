@@ -1,5 +1,4 @@
 import axios, { AxiosError } from "axios";
-import { exit } from "process";
 
 let port = 3000;
 let host = "localhost";
@@ -30,6 +29,7 @@ beforeAll(async () => {
         await axios.delete(`${bkUrl}`);
         await axios.delete(`${authorUrl}`)
         await axios.delete(`${credUrl}/users`)
+        await axios.post(`${credUrl}/signup/test`)
     } catch (e) {
         console.log("ERROR , PLEASE BREAK",e);
     }
@@ -90,7 +90,7 @@ test("POST /author invalid", async () => {
             throw errorObj;
         }
         let { response } = errorObj;
-        expect(response.status).toEqual(403);
+        expect(response.status).toEqual(400);
         expect(response.data).toEqual({ error: "invalid author format" });
     }
 });
@@ -466,7 +466,7 @@ test("Fail login", async()=>{
             throw errorObj;
         }
         let { response } = errorObj;
-        expect(response.status).toEqual(400);
+        expect(response.status).toEqual(403);
         expect(response.data).toEqual({ message: "Username or password incorrect" });
     }
 

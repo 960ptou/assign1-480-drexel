@@ -21,8 +21,6 @@ export function CredientialForm(props : CredientialFormProps) {
             password : password,
         }
 
-        console.log(postLogin) // DEBUG
-
         try{
             const res = await fetch(props.url, {
                 method: "POST",
@@ -41,7 +39,6 @@ export function CredientialForm(props : CredientialFormProps) {
                 }
             }
             setMsg(data.message || data.error)
-            console.log(data); // REMOVE
         } catch(e){
             console.log("Shouldn't be here");
         }

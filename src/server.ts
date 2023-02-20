@@ -1,6 +1,15 @@
 import express from "express";
+import helmet from "helmet";
 
-let app = express();
+const app = express();
+
+
+app.use(helmet.contentSecurityPolicy()) 
+app.use(helmet.hsts())// perfer HTTPS
+app.use(helmet.crossOriginOpenerPolicy()) // same origin
+app.use(helmet.crossOriginResourcePolicy())
+
+
 app.use(express.json());
 
 // INSERTED

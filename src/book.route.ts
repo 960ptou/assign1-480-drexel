@@ -21,7 +21,7 @@ router.get("/book/:id", async (req: Request, res: BookArrayResponse) => {
             [req.params.id]
         );
         if (bks === undefined){
-            return res.status(403).json({error : "No book found with related Id"});
+            return res.status(400).json({error : "No book found with related Id"});
         }
 
         return res.json({books: [bks]});
@@ -56,7 +56,7 @@ router.post("/book", authorize(), async (req: BookRequestBody, res: StringRespon
     try {
         BookSchema.parse(req.body);
     } catch (e) {
-        return res.status(403).json({ error: "book format invalid" });
+        return res.status(400).json({ error: "book format invalid" });
     }
 
     const authorId: string = req.body.author_id;
@@ -78,6 +78,9 @@ router.post("/book", authorize(), async (req: BookRequestBody, res: StringRespon
     let insertStatement = await db.prepare(
         "insert into books(id, author_id, title, pub_year, genre) values (?,?,?,?,?)"
     );
+    let insertRelation = await db.prepare(
+        "insert into own_book(userid, bid) values (?, ?)"
+    )
     await insertStatement.bind([
         bkid,
         authorId,
@@ -85,9 +88,11 @@ router.post("/book", authorize(), async (req: BookRequestBody, res: StringRespon
         req.body.pub_year,
         req.body.genre,
     ]);
+    await insertRelation.bind([res.locals.userid, bkid])
 
     try {
         await insertStatement.run();
+        await insertRelation.run();
         res.json({ message: "inserted" });
     } catch (e) {
         res.status(500).json({ error: "DB query error" });
@@ -100,7 +105,7 @@ router.put("/book", authorize(), async (req: BookRequestBody, res: StringRespons
     try {
         BookSchema.parse(req.body);
     } catch (e) {
-        return res.status(403).json({ error: "book format invalid" });
+        return res.status(400).json({ error: "book format invalid" });
     }
 
     const authorId: string = req.body.author_id;
@@ -109,6 +114,16 @@ router.put("/book", authorize(), async (req: BookRequestBody, res: StringRespons
     let author = await db.get("select * from authors where id = ?", [authorId]);
     if (!author) {
         return res.status(400).json({ error: "author don't exist" });
+    }
+
+    // check is own by user
+    let isRelated = await db.get(
+        "select * from own_book where userid = ? and bid = ?", 
+        [res.locals.userid, req.body.id]
+    );
+
+    if (!isRelated){
+        return res.status(400).json({error : "You can't change this book, Not owner"})
     }
 
     // inserting
@@ -131,21 +146,6 @@ router.put("/book", authorize(), async (req: BookRequestBody, res: StringRespons
     }
 });
 
-// NOTE : THIS IS ONLY used for testing, REMOVE after actual depolyment
-router.delete("/book", authorize(),  async (req: Request, res: StringResponse) => {
-    let allBooks = await db.get("select * from books");
-    if (!allBooks){
-        return res.json({message : "No Books in DB already"});
-    }
-
-    let statement = await db.prepare("delete from books");
-    try {
-        const result = await statement.run();
-        return res.json({ message: "all books deleted" });
-    } catch (e) {
-        res.status(500).json({ error: "DB query error" });
-    }
-});
 
 // DELETE
 router.delete("/book/:id", authorize(), async (req: Request, res: StringResponse) => {
@@ -155,6 +155,15 @@ router.delete("/book/:id", authorize(), async (req: Request, res: StringResponse
     let bookWithSameId = await db.get("select * from books where id = ?", [bkid]);
     if (!bookWithSameId){
         return res.status(400).json({ error: "insertion failed : book doesn't exist"})
+    }
+    // Check ownership
+    let isRelated = await db.get(
+        "select * from own_book where userid = ? and bid = ?", 
+        [res.locals.userid, req.params.id]
+    );
+
+    if (!isRelated){
+        return res.status(400).json({error : "You can't delete this book, Not owner"})
     }
 
     // Deleting
@@ -170,6 +179,27 @@ router.delete("/book/:id", authorize(), async (req: Request, res: StringResponse
         res.status(500).json({ error: "DB query error" });
     }
 });
+
+
+// NOTE : THIS IS ONLY used for testing
+if (process.env.NODE_ENV === "test"){
+    //REMOVE after actual depolyment
+    router.delete("/book", authorize(),  async (req: Request, res: StringResponse) => {
+        let allBooks = await db.get("select * from books");
+        if (!allBooks){
+            return res.json({message : "No Books in DB already"});
+        }
+    
+        let statement = await db.prepare("delete from books");
+        try {
+            const result = await statement.run();
+            return res.json({ message: "all books deleted" });
+        } catch (e) {
+            res.status(500).json({ error: "DB query error" });
+        }
+    });
+}
+
 
 
 export const bookRouter = router;

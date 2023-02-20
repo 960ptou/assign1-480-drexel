@@ -33,7 +33,6 @@ export function PostForm(props: PostFormProps) {
     const [postBody, setPostBody] = useState(body);
 
     async function upload(event: React.FormEvent<HTMLFormElement>) {
-        console.log(postBody)
         event.preventDefault();
         try {
             const res = await fetch(props.url, {
@@ -50,7 +49,6 @@ export function PostForm(props: PostFormProps) {
             } else {
                 setUImsg(data.error);
             }
-            console.log(data); // REMOVE
         } catch (error: any) {
             // Only way it will compile
             console.log("Shouldn't be here");
